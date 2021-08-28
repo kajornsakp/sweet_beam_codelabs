@@ -96,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
           GoogleMap(
             zoomControlsEnabled: false,
             mapType: MapType.normal,
-            initialCameraPosition: initialLatLong(),
+            initialCameraPosition: initialLatLong,
             onMapCreated: (GoogleMapController controller) {
               controller.setMapStyle(_mapStyle);
               _controller.complete(controller);
