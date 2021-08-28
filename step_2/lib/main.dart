@@ -1,12 +1,39 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 void main() {
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(App());
+}
+class App extends StatefulWidget {
+  // Create the initialization Future outside of `build`:
+  @override
+  _AppState createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text("error");
+        }
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MyApp();
+        }
+        return CircularProgressIndicator();
+      },
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -35,9 +62,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Completer<GoogleMapController> _controller = Completer();
   ItemScrollController _scrollController = ItemScrollController();
 
-  static final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
+  FirebaseFirestore instance = FirebaseFirestore.instance;
+
+  static final CameraPosition initialLatLong = CameraPosition(
+      target: LatLng(13.7450094, 100.5397336),
+      zoom: 18,
   );
 
   String _mapStyle = "";
@@ -48,6 +77,14 @@ class _MyHomePageState extends State<MyHomePage> {
     rootBundle
         .loadString('assets/style.json')
         .then((value) => _mapStyle = value);
+
+    instance.collection('shops').get().then((snapshot) {
+      snapshot.docs.forEach((element) {
+        print("------------");
+        print(element.data());
+      });
+    });
+
   }
 
   @override
@@ -58,12 +95,13 @@ class _MyHomePageState extends State<MyHomePage> {
           GoogleMap(
             zoomControlsEnabled: false,
             mapType: MapType.normal,
-            initialCameraPosition: _kGooglePlex,
+            initialCameraPosition: initialLatLong(),
             onMapCreated: (GoogleMapController controller) {
               controller.setMapStyle(_mapStyle);
               _controller.complete(controller);
             },
           ),
+          buildCarousel()
         ],
       ),
     );
