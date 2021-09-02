@@ -65,6 +65,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Completer<GoogleMapController> _controller = Completer();
   ItemScrollController _scrollController = ItemScrollController();
 
+  BitmapDescriptor? selectedIcon;
+  BitmapDescriptor? unselectedIcon;
   FirebaseFirestore instance = FirebaseFirestore.instance;
 
   static final CameraPosition initialLatLong = CameraPosition(
@@ -82,8 +84,17 @@ class _MyHomePageState extends State<MyHomePage> {
     rootBundle
         .loadString('assets/style.json')
         .then((value) => _mapStyle = value);
+    loadMarkerIcon();
   }
 
+  void loadMarkerIcon() async {
+    selectedIcon = await BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: 2.5, size: Size.square(20)),
+        'assets/pin_selected.png');
+    unselectedIcon = await BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: 2.5, size: Size.square(20)),
+        'assets/pin_unselect.png');
+}
   Future<void> fetchShops() async {
     var snapshot = await instance.collection('shops').get();
 
@@ -104,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
     shopList.forEach((element) {
       final marker = Marker(
         markerId: MarkerId(element.name),
+        icon: unselectedIcon ?? BitmapDescriptor.defaultMarker,
         position: element.location,
         infoWindow: InfoWindow(
           title: element.name
